@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.web.WebView?>
+
+<BorderPane fx:controller="com.example.backend.MapController" stylesheets="@style.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" styleClass="main-background">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <left>
+        <VBox spacing="12" styleClass="sidebar">
+            <padding>
+                <Insets top="20" right="15" bottom="20" left="15"/>
+            </padding>
+
+            <!-- Przycisk powrotu do menu na samej górze paska bocznego -->
+            <Button fx:id="btnBackToMenu" text="← Menu Projektów" onAction="#handleBackToMenu" maxWidth="Infinity" styleClass="btn, btn-grey"/>
+
+            <Button fx:id="btnAddCamera" text="📷 Dodaj Kamerę" onAction="#handleAddCamera" maxWidth="Infinity" styleClass="btn, btn-white"/>
+            <Button fx:id="btnAddFiber" text="🔌 Dodaj Światłowód" onAction="#handleAddFiber" maxWidth="Infinity" styleClass="btn, btn-white"/>
+
+            <Button fx:id="btnFinishFiber" text="✓ Zatwierdź dodanie światłowodu / kamery" onAction="#handleFinishFiber" maxWidth="Infinity" styleClass="btn, btn-green" wrapText="true" textAlignment="CENTER"/>
+
+            <Button text="💾 Zapisz Sieć" onAction="#handleSaveData" maxWidth="Infinity" styleClass="btn, btn-black"/>
+
+            <ListView fx:id="elementList" VBox.vgrow="ALWAYS" styleClass="custom-list"/>
+
+            <Button fx:id="btnEditFiber" text="🛠 Edytuj Światłowód" onAction="#handleEditFiber" maxWidth="Infinity" styleClass="btn, btn-grey"/>
+            <Button fx:id="btnRename" text="📝 Zmień Nazwę" onAction="#handleRename" maxWidth="Infinity" styleClass="btn, btn-grey"/>
+            <Button fx:id="btnDelete" text="🗑 Usuń Element" onAction="#handleDelete" maxWidth="Infinity" styleClass="btn, btn-danger"/>
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane styleClass="map-container">
+            <BorderPane.margin>
+                <Insets left="20"/>
+            </BorderPane.margin>
+
+            <WebView fx:id="webView" />
+        </StackPane>
+    </center>
+</BorderPane>

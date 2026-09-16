@@ -1,6 +1,0 @@
---add-modules
-jdk.jsobject
---patch-module
-com.example.opolenetworkmap=_
---add-reads
-com.example.opolenetworkmap=ALL-UNNAMED

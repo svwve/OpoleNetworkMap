@@ -3,10 +3,10 @@ module com.example.opolenetworkmap {
     requires javafx.fxml;
     requires javafx.web;
     requires java.sql;
+    requires jdk.jsobject; // <-- To rozwiązuje problem z netscape.javascript
 
-    exports com.example;
-    exports com.example.backend;
-
-    opens com.example to javafx.fxml;
+    // Wskaż pakiety, które faktycznie istnieją w Twoim projekcie:
     opens com.example.backend to javafx.fxml;
+    exports com.example.backend;
+    exports com.example.model;
 }

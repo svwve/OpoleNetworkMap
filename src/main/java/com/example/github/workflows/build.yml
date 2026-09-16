@@ -2,18 +2,18 @@ name: Build JavaFX App
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master" ] 
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -25,16 +25,15 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
-      - name: Upload Artifact (macOS)
-        if: startsWith(matrix.os, 'macos')
-        uses: actions/upload-artifact@v4
-        with:
-          name: OpoleNetworkMap-macOS
-          path: target/*-shaded.jar
+      - name: Run jpackage to create native installer
+        run: |
+          # Automatycznie wykrywa system i buduje odpowiednią paczkę
+          jpackage --type app-image --name OpoleNetworkMap --input target --main-jar OpoleNetworkMap-1.0-SNAPSHOT.jar --main-class com.example.backend.Launcher
 
-      - name: Upload Artifact (Windows)
-        if: startsWith(matrix.os, 'windows')
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OpoleNetworkMap-Windows
-          path: target/*-shaded.jar
+          name: app-${{ matrix.os }}
+          path: |
+            target/*.jar
+            OpoleNetworkMap*

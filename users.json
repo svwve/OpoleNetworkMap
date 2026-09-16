@@ -1,10 +1,5 @@
 [
-  {"username":"sdfasdfas", "password":"1234", "role":"ADMIN"},
-  {"username":"karol", "password":"1234", "role":"OPERATOR"},
-  {"username":"admin1", "password":"1234", "role":"OPERATOR"},
+  {"username":"karol", "password":"1234", "role":"ADMIN"},
   {"username":"admin", "password":"admin123", "role":"ADMIN"},
-  {"username":"admin5", "password":"1234", "role":"ADMIN"},
-  {"username":"karoladmin", "password":"1234", "role":"OPERATOR"},
-  {"username":"operator", "password":"operator123", "role":"OPERATOR"},
-  {"username":"adminkarol", "password":"1234", "role":"ADMIN"}
+  {"username":"operator", "password":"operator123", "role":"OPERATOR"}
 ]

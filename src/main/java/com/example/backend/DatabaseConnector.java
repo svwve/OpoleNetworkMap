@@ -5,9 +5,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnector {
-    private static final String URL = System.getenv().getOrDefault("DB_URL", "jdbc:postgresql://db.ewwfuaxzaxouidrpcvyk.supabase.co:5432/postgres");
-    private static final String USER = System.getenv().getOrDefault("DB_USER", "postgres");
-    private static final String PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "TWOJE_HASLO");
+
+    private static final String URL = "jdbc:postgresql://db.ewwfuazxazouidrpcvyk.supabase.co:5432/postgres";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "K@R0lPLlarczyk2oo8";
 
     public static Connection getConnection() throws SQLException {
         try {

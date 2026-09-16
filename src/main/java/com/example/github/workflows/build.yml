@@ -28,6 +28,9 @@ jobs:
 
       - name: Run jpackage to create native installer
         run: |
+          # Usuwamy stary katalog lub pliki wynikowe, aby jpackage nie zgłaszał błędu o ich istnieniu
+          rm -rf OpoleNetworkMap.app OpoleNetworkMap
+          
           # Automatycznie wykrywa system i buduje odpowiednią paczkę
           jpackage --type app-image --name OpoleNetworkMap --input target --main-jar OpoleNetworkMap-1.0-SNAPSHOT.jar --main-class com.example.backend.Launcher
 

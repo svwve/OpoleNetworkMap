@@ -2,12 +2,13 @@ name: Build JavaFX App
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master" ] # Skrypt uruchomi się po wypchnięciu kodu na główną gałąź
 
 jobs:
   build:
     strategy:
       matrix:
+        # Definiujemy systemy, na których GitHub ma zbudować aplikację
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
@@ -36,4 +37,4 @@ jobs:
           name: app-${{ matrix.os }}
           path: |
             target/*.jar
-            OpoleNetworkMap*
+            OpoleNetworkMap/

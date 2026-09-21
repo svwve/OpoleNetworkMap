@@ -6,6 +6,7 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 com/example/config.properties
+src/main/resources/config.properties
 
 
 .idea/

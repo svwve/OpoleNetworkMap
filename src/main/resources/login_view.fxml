@@ -12,20 +12,19 @@
         <Insets top="40" right="40" bottom="40" left="40" />
     </padding>
 
-    <!-- Nagłówek -->
+    <Label fx:id="versionLabel" style="-fx-font-size: 11px; -fx-text-fill: #94a3b8;" text="Sprawdzanie aktualizacji..." />
+
     <VBox alignment="CENTER" spacing="4">
         <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" text="Opole Network Map" />
         <Label style="-fx-font-size: 13px; -fx-text-fill: #64748b;" text="Zaloguj się do swojego konta" />
     </VBox>
 
-    <!-- Formularz -->
     <VBox alignment="CENTER" spacing="12" maxWidth="280">
         <TextField fx:id="usernameField" promptText="Nazwa użytkownika" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 10; -fx-font-size: 13px;" />
         <PasswordField fx:id="passwordField" promptText="Hasło" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 10; -fx-font-size: 13px;" />
 
         <Label fx:id="errorLabel" visible="false" style="-fx-text-fill: #ef4444; -fx-font-size: 12px;" wrapText="true" alignment="CENTER"/>
 
-        <!-- Przyciski -->
         <Button text="Zaloguj się" onAction="#handleLogin" maxWidth="Infinity" defaultButton="true" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10; -fx-font-size: 13px; -fx-cursor: hand;" />
         <Button text="Stwórz nowe konto" onAction="#handleOpenRegister" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-font-weight: bold; -fx-border-color: #2563eb; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 9; -fx-font-size: 13px; -fx-cursor: hand;" />
     </VBox>

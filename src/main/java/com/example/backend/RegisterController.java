@@ -52,25 +52,6 @@ public class RegisterController {
     }
 
     @FXML
-    private void handleOpenRegister() {
-        try {
-            URL fxmlLocation = getClass().getResource("/register_view.fxml");
-
-            if (fxmlLocation == null) {
-                System.err.println("BŁĄD: Nie znaleziono pliku register_view.fxml w folderze resources!");
-                return;
-            }
-
-            FXMLLoader loader = new FXMLLoader(fxmlLocation);
-            Parent root = loader.load();
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(root, 400, 400));
-            stage.setTitle("Rejestracja - Opole Network Map");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    @FXML
     public void handleBackToLogin() {
         try {
             URL fxmlLocation = getClass().getResource("/login_view.fxml");
@@ -82,15 +63,12 @@ public class RegisterController {
             FXMLLoader loader = new FXMLLoader(fxmlLocation);
             Parent root = loader.load();
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(root, 400, 360));
+            stage.setScene(new Scene(root, 400, 300));
             stage.setTitle("Logowanie - Opole Network Map");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-
-
 
     private void showMessage(String text, Color color) {
         messageLabel.setText(text);

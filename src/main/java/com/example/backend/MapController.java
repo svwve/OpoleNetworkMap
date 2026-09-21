@@ -44,6 +44,10 @@ public class MapController {
     @FXML private Button btnRename;
     @FXML private Button btnDelete;
 
+    // Checkboxy do włączania/wyłączania widoczności
+    @FXML private CheckBox toggleCameraVisibilityCheckBox;
+    @FXML private CheckBox toggleFiberVisibilityCheckBox;
+
     private WebEngine webEngine;
     private Role currentRole = Role.ADMIN; // Domyślna rola
     private Project currentProject;
@@ -84,6 +88,10 @@ public class MapController {
             if (btnEditFiber != null) btnEditFiber.setDisable(!isAdmin);
             if (btnRename != null) btnRename.setDisable(!isAdmin);
             if (btnDelete != null) btnDelete.setDisable(!isAdmin);
+
+            // Checkboxy widoczności dostępne dla każdego
+            if (toggleCameraVisibilityCheckBox != null) toggleCameraVisibilityCheckBox.setDisable(false);
+            if (toggleFiberVisibilityCheckBox != null) toggleFiberVisibilityCheckBox.setDisable(false);
         });
     }
 
@@ -253,7 +261,6 @@ public class MapController {
         }
     }
 
-
     @FXML
     public void handleSaveData() {
         if (currentProject == null || currentRole != Role.ADMIN) return;
@@ -352,6 +359,32 @@ public class MapController {
     @FXML
     public void handleLoadData() {
         loadProjectDataFromDatabase();
+    }
+
+    // Obsługa widoczności kamer
+    @FXML
+    public void handleToggleCameraVisibility() {
+        if (toggleCameraVisibilityCheckBox != null) {
+            boolean isVisible = toggleCameraVisibilityCheckBox.isSelected();
+            if (isVisible) {
+                webEngine.executeScript("showAllCameras();");
+            } else {
+                webEngine.executeScript("hideAllCameras();");
+            }
+        }
+    }
+
+    // Obsługa widoczności światłowodów
+    @FXML
+    public void handleToggleFiberVisibility() {
+        if (toggleFiberVisibilityCheckBox != null) {
+            boolean isVisible = toggleFiberVisibilityCheckBox.isSelected();
+            if (isVisible) {
+                webEngine.executeScript("showAllFibers();");
+            } else {
+                webEngine.executeScript("hideAllFibers();");
+            }
+        }
     }
 
     private void openCameraDetailsDialog(int id) {
@@ -581,9 +614,11 @@ public class MapController {
         if (selected != null && (selected.contains("Światłowód") || selected.contains("Swiatlowod"))) {
             String id = extractId(selected);
             if (id != null) {
+                webEngine.executeScript("toggleFiberGeometryEditing(" + id + ");");
+
                 Dialog<ButtonType> dialog = new Dialog<>();
                 dialog.setTitle("Edycja Światłowodu");
-                dialog.setHeaderText("Ustaw parametry światłowodu");
+                dialog.setHeaderText("Ustaw parametry oraz edytuj kształt na mapie");
 
                 if (webView.getScene() != null) {
                     dialog.initOwner(webView.getScene().getWindow());

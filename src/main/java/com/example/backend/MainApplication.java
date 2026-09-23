@@ -16,7 +16,7 @@ public class MainApplication extends Application {
         checkforUpdates();
 
         FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("/login_view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 400, 300);
+        Scene scene = new Scene(fxmlLoader.load(), 400, 500);
         stage.setTitle("Logowanie - Opole Network Map");
         stage.setScene(scene);
         stage.show();
@@ -31,7 +31,6 @@ public class MainApplication extends Application {
                     String localVersion = props.getProperty("app.version", "1.0.0");
 
                      java.net.URI uri = java.net.URI.create("https://api.github.com/repos/svwve/OpoleNetworkMap/releases/latest");
-
                     java.net.HttpURLConnection connection = (java.net.HttpURLConnection) uri.toURL().openConnection();
                     connection.setRequestMethod("GET");
                     connection.setRequestProperty("Accept", "application/vnd.github+json");
@@ -50,13 +49,7 @@ public class MainApplication extends Application {
                             String remoteVersion = json.substring(start, end).replace("v", ""); // usuwa 'v' jeśli dodajesz np. v1.1.0
 
 
-                            if (!localVersion.equals(remoteVersion)) {
-                                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-                                alert.setTitle("Dostępna aktualizacja");
-                                alert.setHeaderText("Pojawiła się nowa wersja aplikacji!");
-                                alert.setContentText("Zainstalowana wersja: " + localVersion + "\nNowa wersja: " + remoteVersion);
-                                alert.showAndWait();
-                            }
+
                         }
                     }
                 }

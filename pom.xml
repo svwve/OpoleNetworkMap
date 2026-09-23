@@ -37,6 +37,13 @@
             <version>${javafx.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
+
+
         <!-- JavaFX Web (potrzebne do obsługi mapy i WebView) -->
         <dependency>
             <groupId>org.openjfx</groupId>

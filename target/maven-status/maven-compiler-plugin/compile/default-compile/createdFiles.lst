@@ -11,5 +11,4 @@ com/example/backend/LoginController.class
 com/example/backend/UpdateService.class
 com/example/backend/ProjectService.class
 com/example/model/Role.class
-com/example/backend/UserService$User.class
 com/example/backend/RegisterController.class

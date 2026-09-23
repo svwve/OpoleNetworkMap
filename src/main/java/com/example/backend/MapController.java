@@ -41,27 +41,27 @@ public class MapController {
     @FXML private Button btnAddFiber;
     @FXML private Button btnFinishFiber;
     @FXML private Button btnEditFiber;
+    @FXML private Button btnAppendFromEnd;
     @FXML private Button btnRename;
     @FXML private Button btnDelete;
 
-    // Checkboxy do włączania/wyłączania widoczności
+    // Nowo dodane przyciski powiązane z FXML
+    @FXML private Button btnUndoFiber;
+    @FXML private Button btnDeleteVertex;
+
     @FXML private CheckBox toggleCameraVisibilityCheckBox;
     @FXML private CheckBox toggleFiberVisibilityCheckBox;
 
     private WebEngine webEngine;
-    private Role currentRole = Role.ADMIN; // Domyślna rola
+    private Role currentRole = Role.ADMIN;
     private Project currentProject;
 
-    /**
-     * Inicjalizacja danych po otwarciu widoku z menu
-     */
     public void initData(Project project, Role role) {
         this.currentProject = project;
         if (role != null) {
             this.currentRole = role;
         }
 
-        // Zawsze aktualizujemy uprawnienia na interfejsie użytkownika
         applyPermissions();
 
         if (webEngine != null && webEngine.getLoadWorker().getState() == Worker.State.SUCCEEDED) {
@@ -86,10 +86,14 @@ public class MapController {
             if (btnAddFiber != null) btnAddFiber.setDisable(!isAdmin);
             if (btnFinishFiber != null) btnFinishFiber.setDisable(!isAdmin);
             if (btnEditFiber != null) btnEditFiber.setDisable(!isAdmin);
+            if (btnAppendFromEnd != null) btnAppendFromEnd.setDisable(!isAdmin);
             if (btnRename != null) btnRename.setDisable(!isAdmin);
             if (btnDelete != null) btnDelete.setDisable(!isAdmin);
 
-            // Checkboxy widoczności dostępne dla każdego
+            // Prawa dostępu do nowych przycisków
+            if (btnUndoFiber != null) btnUndoFiber.setDisable(!isAdmin);
+            if (btnDeleteVertex != null) btnDeleteVertex.setDisable(!isAdmin);
+
             if (toggleCameraVisibilityCheckBox != null) toggleCameraVisibilityCheckBox.setDisable(false);
             if (toggleFiberVisibilityCheckBox != null) toggleFiberVisibilityCheckBox.setDisable(false);
         });
@@ -188,11 +192,59 @@ public class MapController {
         }
     }
 
+    // --- OBSŁUGA NOWYCH PRZYCISKÓW (Cofnięcie zmiany i usuwanie wierzchołka) ---
+
+    @FXML
+    public void handleUndoFiberChange() {
+        if (currentRole != Role.ADMIN) return;
+        String selected = elementList.getSelectionModel().getSelectedItem();
+        if (selected != null && (selected.contains("Światłowód") || selected.contains("Swiatlowod"))) {
+            String id = extractId(selected);
+            if (id != null) {
+                webEngine.executeScript(String.format(
+                        "if (typeof undoLastFiberChange === 'function') { undoLastFiberChange(%s); }", id
+                ));
+                refreshElementList();
+            }
+        } else {
+            showAlert("Informacja", "Zaznacz światłowód z listy, dla którego chcesz cofnąć ostatnią zmianę.");
+        }
+    }
+
+    @FXML
+    public void handleEnableVertexDeletion() {
+        if (currentRole != Role.ADMIN) return;
+        String selected = elementList.getSelectionModel().getSelectedItem();
+        if (selected != null && (selected.contains("Światłowód") || selected.contains("Swiatlowod"))) {
+            String id = extractId(selected);
+            if (id != null) {
+                webEngine.executeScript(String.format(
+                        "if (typeof enableFiberVertexDeletionMode === 'function') { enableFiberVertexDeletionMode(%s); }", id
+                ));
+            }
+        } else {
+            showAlert("Informacja", "Zaznacz światłowód z listy, aby włączyć tryb usuwania jego wierzchołków.");
+        }
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        if (webView.getScene() != null) {
+            alert.initOwner(webView.getScene().getWindow());
+        }
+        alert.showAndWait();
+    }
+
+    // ------------------------------------------------------------------------
+
     private void loadProjectDataFromDatabase() {
         if (currentProject == null) return;
 
         try (Connection conn = DatabaseConnector.getConnection()) {
-            webEngine.executeScript("clearMap();");
+            webEngine.executeScript("if (typeof clearMap === 'function') { clearMap(); }");
 
             String camSql = "SELECT id, name, latitude AS lat, longitude AS lng, description FROM cameras WHERE project_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(camSql)) {
@@ -219,7 +271,7 @@ public class MapController {
                     }
                     String photosJson = "[" + String.join(",", photos) + "]";
 
-                    String script = String.format(Locale.US, "addCameraFromDb(%d, '%s', %.6f, %.6f, '%s', %s);",
+                    String script = String.format(Locale.US, "if (typeof addCameraFromDb === 'function') { addCameraFromDb(%d, '%s', %.6f, %.6f, '%s', %s); }",
                             id, name, lat, lng, desc, photosJson);
                     webEngine.executeScript(script);
                 }
@@ -249,7 +301,7 @@ public class MapController {
                     }
                     pts.append("]");
 
-                    String script = String.format(Locale.US, "addFiberFromDb(%d, '%s', '%s', %d, %s);",
+                    String script = String.format(Locale.US, "if (typeof addFiberFromDb === 'function') { addFiberFromDb(%d, '%s', '%s', %d, %s); }",
                             fiberId, name, color, weight, pts.toString());
                     webEngine.executeScript(script);
                 }
@@ -276,7 +328,7 @@ public class MapController {
                 d2.executeUpdate();
             }
 
-            Object rawCameras = webEngine.executeScript("getAllCamerasData();");
+            Object rawCameras = webEngine.executeScript("typeof getAllCamerasData === 'function' ? getAllCamerasData() : [];");
             if (rawCameras != null && !rawCameras.toString().equals("[]")) {
                 String cameraSql = "INSERT INTO cameras (project_id, name, latitude, longitude, description) VALUES (?, ?, ?, ?, ?) RETURNING id";
                 String photoSql = "INSERT INTO camera_photos (camera_id, photo_url) VALUES (?, ?)";
@@ -309,7 +361,7 @@ public class MapController {
                 }
             }
 
-            Object rawFibers = webEngine.executeScript("getAllFibersData();");
+            Object rawFibers = webEngine.executeScript("typeof getAllFibersData === 'function' ? getAllFibersData() : [];");
             if (rawFibers != null && !rawFibers.toString().equals("[]")) {
                 String fiberSql = "INSERT INTO fibers (project_id, name, color, weight) VALUES (?, ?, ?, ?) RETURNING id";
                 String pointSql = "INSERT INTO fiber_points (fiber_id, point_order, lat, lng) VALUES (?, ?, ?, ?)";
@@ -344,12 +396,7 @@ public class MapController {
 
             conn.commit();
             loadProjectDataFromDatabase();
-
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Zapis");
-            alert.setHeaderText(null);
-            alert.setContentText("Zapisano dane projektu w strukturze relacyjnej Supabase.");
-            alert.showAndWait();
+            showAlert("Zapis", "Zapisano zmiany.");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -361,34 +408,34 @@ public class MapController {
         loadProjectDataFromDatabase();
     }
 
-    // Obsługa widoczności kamer
     @FXML
     public void handleToggleCameraVisibility() {
         if (toggleCameraVisibilityCheckBox != null) {
             boolean isVisible = toggleCameraVisibilityCheckBox.isSelected();
             if (isVisible) {
-                webEngine.executeScript("showAllCameras();");
+                webEngine.executeScript("if (typeof showAllCameras === 'function') showAllCameras();");
             } else {
-                webEngine.executeScript("hideAllCameras();");
+                webEngine.executeScript("if (typeof hideAllCameras === 'function') hideAllCameras();");
             }
         }
     }
 
-    // Obsługa widoczności światłowodów
     @FXML
     public void handleToggleFiberVisibility() {
         if (toggleFiberVisibilityCheckBox != null) {
             boolean isVisible = toggleFiberVisibilityCheckBox.isSelected();
             if (isVisible) {
-                webEngine.executeScript("showAllFibers();");
+                webEngine.executeScript("if (typeof showAllFibers === 'function') showAllFibers();");
             } else {
-                webEngine.executeScript("hideAllFibers();");
+                webEngine.executeScript("if (typeof hideAllFibers === 'function') hideAllFibers();");
             }
         }
     }
 
     private void openCameraDetailsDialog(int id) {
-        Object rawData = webEngine.executeScript("getCameraData(" + id + ");");
+        Object rawData = webEngine.executeScript(String.format(
+                "if (typeof getCameraData === 'function') { getCameraData(%d); } else { null; }", id
+        ));
         if (rawData == null) return;
 
         String name = "Kamera " + id;
@@ -443,12 +490,23 @@ public class MapController {
             chooser.setTitle("Wybierz zdjęcie kamery");
             chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Pliki graficzne", "*.png", "*.jpg", "*.jpeg"));
             File file = chooser.showOpenDialog(webView.getScene().getWindow());
+
             if (file != null) {
-                String path = file.getAbsolutePath().replace("\\", "/");
-                photoPaths.add(path);
-                addPhotoThumbnail(photoPane, path);
+                try {
+                    byte[] fileContent = java.nio.file.Files.readAllBytes(file.toPath());
+                    String base64Image = java.util.Base64.getEncoder().encodeToString(fileContent);
+
+                    String mimeType = file.getName().toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+                    String dataUrl = "data:" + mimeType + ";base64," + base64Image;
+
+                    photoPaths.add(dataUrl);
+                    addPhotoThumbnail(photoPane, dataUrl);
+                } catch (java.io.IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         });
+
 
         content.getChildren().addAll(
                 new Label("Opis / Informacje dodatkowe:"),
@@ -482,15 +540,28 @@ public class MapController {
             }
             jsonPhotos.append("]");
 
-            webEngine.executeScript(String.format("updateCameraDetails(%d, '%s', %s);", id, newDesc, jsonPhotos.toString()));
+            webEngine.executeScript(String.format(
+                    "if (typeof updateCameraDetails === 'function') { updateCameraDetails(%d, '%s', %s); }", id, newDesc, jsonPhotos.toString()
+            ));
         }
     }
 
     private void addPhotoThumbnail(FlowPane pane, String path) {
         try {
-            File imgFile = new File(path);
-            if (imgFile.exists()) {
-                ImageView imgView = new ImageView(new Image(imgFile.toURI().toString()));
+            javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView();
+
+            if (path.startsWith("data:image")) {
+                String base64Data = path.substring(path.indexOf(",") + 1);
+                byte[] imageBytes = java.util.Base64.getDecoder().decode(base64Data);
+                imgView.setImage(new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes)));
+            } else {
+                File imgFile = new File(path);
+                if (imgFile.exists()) {
+                    imgView.setImage(new javafx.scene.image.Image(imgFile.toURI().toString()));
+                }
+            }
+
+            if (imgView.getImage() != null) {
                 imgView.setFitWidth(100);
                 imgView.setFitHeight(100);
                 imgView.setPreserveRatio(true);
@@ -501,10 +572,11 @@ public class MapController {
         }
     }
 
+
     private void refreshElementList() {
         Platform.runLater(() -> {
             try {
-                Object result = webEngine.executeScript("getElementsListString();");
+                Object result = webEngine.executeScript("typeof getElementsListString === 'function' ? getElementsListString() : '';");
                 if (result != null) {
                     elementList.getItems().clear();
                     String data = result.toString();
@@ -538,7 +610,9 @@ public class MapController {
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(cameraName -> {
             String escapedName = cameraName.replace("'", "\\'");
-            webEngine.executeScript(String.format("enableCameraPlacement('%s');", escapedName));
+            webEngine.executeScript(String.format(
+                    "if (typeof enableCameraPlacement === 'function') { enableCameraPlacement('%s'); }", escapedName
+            ));
         });
     }
 
@@ -557,15 +631,34 @@ public class MapController {
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(fiberName -> {
             String escapedName = fiberName.replace("'", "\\'");
-            webEngine.executeScript(String.format("enableFiberDrawing('%s');", escapedName));
+            webEngine.executeScript(String.format(
+                    "if (typeof enableFiberDrawing === 'function') { enableFiberDrawing('%s'); }", escapedName
+            ));
         });
     }
 
     @FXML
     public void handleFinishFiber() {
         if (currentRole != Role.ADMIN) return;
-        webEngine.executeScript("finishFiberDrawing();");
+        webEngine.executeScript("if (typeof finishFiberDrawing === 'function') { finishFiberDrawing(); }");
         refreshElementList();
+    }
+
+    @FXML
+    public void handleAppendFromEnd() {
+        if (currentRole != Role.ADMIN) return;
+
+        String selected = elementList.getSelectionModel().getSelectedItem();
+        if (selected != null && (selected.contains("Światłowód") || selected.contains("Swiatlowod"))) {
+            String id = extractId(selected);
+            if (id != null) {
+                webEngine.executeScript(String.format(
+                        "if (typeof enableFiberEndPointsSelection === 'function') { enableFiberEndPointsSelection(%s); }", id
+                ));
+            }
+        } else {
+            showAlert("Informacja", "Zaznacz światłowód z listy, aby wybrać koniec do dorysowania.");
+        }
     }
 
     @FXML
@@ -575,7 +668,9 @@ public class MapController {
         if (selected != null) {
             String id = extractId(selected);
             if (id != null) {
-                webEngine.executeScript("deleteElement(" + id + ");");
+                webEngine.executeScript(String.format(
+                        "if (typeof deleteElement === 'function') { deleteElement(%s); }", id
+                ));
                 refreshElementList();
             }
         }
@@ -600,7 +695,9 @@ public class MapController {
                 Optional<String> result = dialog.showAndWait();
                 result.ifPresent(newName -> {
                     String escapedName = newName.replace("'", "\\'");
-                    webEngine.executeScript("renameElement(" + id + ", '" + escapedName + "');");
+                    webEngine.executeScript(String.format(
+                            "if (typeof renameElement === 'function') { renameElement(%s, '%s'); }", id, escapedName
+                    ));
                     refreshElementList();
                 });
             }
@@ -610,29 +707,47 @@ public class MapController {
     @FXML
     public void handleEditFiber() {
         if (currentRole != Role.ADMIN) return;
+
         String selected = elementList.getSelectionModel().getSelectedItem();
         if (selected != null && (selected.contains("Światłowód") || selected.contains("Swiatlowod"))) {
             String id = extractId(selected);
             if (id != null) {
-                webEngine.executeScript("toggleFiberGeometryEditing(" + id + ");");
+                String currentColor = "#2980b9";
+                String currentWeight = "5";
+
+                try {
+                    Object rawData = webEngine.executeScript(String.format(
+                            "if (typeof getFiberData === 'function') { getFiberData(%s); } else { null; }", id
+                    ));
+                    if (rawData != null) {
+                        String json = rawData.toString();
+                        Matcher colorMatch = Pattern.compile("\"color\":\"(.*?)\"").matcher(json);
+                        if (colorMatch.find()) currentColor = colorMatch.group(1);
+
+                        Matcher weightMatch = Pattern.compile("\"weight\":(\\d+)").matcher(json);
+                        if (weightMatch.find()) currentWeight = weightMatch.group(1);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Nie udało się pobrać parametrów światłowodu: " + e.getMessage());
+                }
 
                 Dialog<ButtonType> dialog = new Dialog<>();
                 dialog.setTitle("Edycja Światłowodu");
-                dialog.setHeaderText("Ustaw parametry oraz edytuj kształt na mapie");
+                dialog.setHeaderText("Zmień parametry trasy");
 
                 if (webView.getScene() != null) {
                     dialog.initOwner(webView.getScene().getWindow());
                 }
 
-                ButtonType confirmButtonType = new ButtonType("Zatwierdź", ButtonBar.ButtonData.OK_DONE);
+                ButtonType confirmButtonType = new ButtonType("Zatwierdź i Zapisz", ButtonBar.ButtonData.OK_DONE);
                 dialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
 
                 GridPane grid = new GridPane();
                 grid.setHgap(10);
                 grid.setVgap(10);
 
-                TextField colorField = new TextField("#e74c3c");
-                TextField weightField = new TextField("6");
+                TextField colorField = new TextField(currentColor);
+                TextField weightField = new TextField(currentWeight);
 
                 grid.add(new Label("Kolor (HEX):"), 0, 0);
                 grid.add(colorField, 1, 0);
@@ -642,19 +757,20 @@ public class MapController {
                 dialog.getDialogPane().setContent(grid);
 
                 Optional<ButtonType> result = dialog.showAndWait();
+
                 if (result.isPresent() && result.get() == confirmButtonType) {
                     String color = colorField.getText().trim();
                     String weight = weightField.getText().trim();
-                    webEngine.executeScript(String.format("editFiberData(%s, '%s', %s);", id, color, weight));
+
+                    webEngine.executeScript(String.format(
+                            "if (typeof editFiberData === 'function') { editFiberData(%s, '%s', %s); }",
+                            id, color, weight
+                    ));
                     refreshElementList();
                 }
             }
         } else {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Informacja");
-            alert.setHeaderText(null);
-            alert.setContentText("Zaznacz światłowód z listy, aby go edytować.");
-            alert.showAndWait();
+            showAlert("Informacja", "Zaznacz światłowód z listy, aby go edytować.");
         }
     }
 
